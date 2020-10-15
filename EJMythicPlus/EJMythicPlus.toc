@@ -1,0 +1,6 @@
+## Interface: 90001
+## Title: EJ Mythic Plus
+## Notes: Makes it possible to select Mythic+ difficulties in the Encounter Journal.
+## Author: Imogen Bits
+
+EJMythicPlus.lua
