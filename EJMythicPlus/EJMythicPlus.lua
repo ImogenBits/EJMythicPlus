@@ -19,7 +19,7 @@ do
 		end
 	end
 
-	local MYTHIC_PLUS_DIFFICULTIES = {2, 4, 5, 7, 8, 11, 14}
+	local MYTHIC_PLUS_DIFFICULTIES = {2, 3, 4, 6, 7, 10, 12, 15}
 	local function getMythicPlusDifficultyString(level)
 		local i = 1
 		while MYTHIC_PLUS_DIFFICULTIES[i + 1] and MYTHIC_PLUS_DIFFICULTIES[i + 1] <= level do
@@ -115,8 +115,8 @@ do
 
 	local function isLootUseful(index)
 		if EJ_GetDifficulty() == 23 and C_EncounterJournal.GetPreviewMythicPlusLevel() ~= 0 then
-			local itemID, encounterID, name, icon, slot, armorType, link = (EJ_GetLootInfoByIndex_Old or EJ_GetLootInfoByIndex)(index)
-			if USELESS_MYTHIC_PLUS_SLOTS[slot] then
+			local itemInfo = (C_EncounterJournal.GetLootInfoByIndexOld or C_EncounterJournal.GetLootInfoByIndex)(index)
+			if USELESS_MYTHIC_PLUS_SLOTS[itemInfo.slot] then
 				return false
 			end
 		end
