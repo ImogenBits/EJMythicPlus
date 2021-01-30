@@ -4,22 +4,57 @@ local ADDON_NAME, _ = ...
 local EVENT_FRAME = CreateFrame("frame", ADDON_NAME.."EventFrame", UIParent)
 
 do
+    local MYTHIC_PLUS_DIFFICULTIES = {2, 3, 4, 6, 7, 10, 12, 15}
+    local MYTHIC_PLUS_BONUS_IDS = {
+        [2]  = {ilvl = 187 + 1314, level = 6808},
+        [3]  = {ilvl = 190 + 1314, level = 6809},
+        [4]  = {ilvl = 194 + 1314, level = 7203},
+        [6]  = {ilvl = 197 + 1314, level = 7205},
+        [7]  = {ilvl = 200 + 1314, level = 7206},
+        [10] = {ilvl = 203 + 1314, level = 7209},
+        [12] = {ilvl = 207 + 1314, level = 7211},
+        [15] = {ilvl = 210 + 1314, level = 7214},
+    }
+
+    local BROKEN_PATTERN = ":16:1:3524:"
+    local FIX_PATTERN = ":16:3:6646:%d:%d:"
+
 	do
-		local previewMythicPlusLevel = 0
-		C_EncounterJournal.SetPreviewMythicPlusLevelOld = C_EncounterJournal.SetPreviewMythicPlusLevel
+        local previewMythicPlusLevel = 0
+        
+        C_EncounterJournal.SetPreviewMythicPlusLevelOld = C_EncounterJournal.SetPreviewMythicPlusLevel
+        
 		function C_EncounterJournal.SetPreviewMythicPlusLevel(level)
 			previewMythicPlusLevel = level
 			C_EncounterJournal.SetPreviewMythicPlusLevelOld(level)
 			if EncounterJournal_UpdateDifficulty then
 				EncounterJournal_UpdateDifficulty()
 			end
-		end
+        end
+        
 		function C_EncounterJournal.GetPreviewMythicPlusLevel()
 			return previewMythicPlusLevel
-		end
+        end
+
+        C_EncounterJournal.GetLootInfoByIndexOld = C_EncounterJournal.GetLootInfoByIndex
+
+        function C_EncounterJournal.GetLootInfoByIndex(index, encounterIndex)
+            local itemInfo = C_EncounterJournal.GetLootInfoByIndexOld(index, encounterIndex)
+
+            if itemInfo.link and itemInfo.link:find(BROKEN_PATTERN) then
+                local ids = MYTHIC_PLUS_BONUS_IDS[previewMythicPlusLevel]
+                if not ids then
+                    return itemInfo
+                end
+
+                itemInfo.link = itemInfo.link:gsub(BROKEN_PATTERN,
+                                FIX_PATTERN:format(ids.ilvl, ids.level))
+            end
+
+            return itemInfo
+        end
 	end
 
-	local MYTHIC_PLUS_DIFFICULTIES = {2, 3, 4, 6, 7, 10, 12, 15}
 	local function getMythicPlusDifficultyString(level)
 		local i = 1
 		while MYTHIC_PLUS_DIFFICULTIES[i + 1] and MYTHIC_PLUS_DIFFICULTIES[i + 1] <= level do
@@ -115,7 +150,7 @@ do
 
 	local function isLootUseful(index)
 		if EJ_GetDifficulty() == 23 and C_EncounterJournal.GetPreviewMythicPlusLevel() ~= 0 then
-			local itemInfo = (C_EncounterJournal.GetLootInfoByIndexOld or C_EncounterJournal.GetLootInfoByIndex)(index)
+			local itemInfo = C_EncounterJournal.GetLootInfoByIndex(index)
 			if USELESS_MYTHIC_PLUS_SLOTS[itemInfo.slot] then
 				return false
 			end
